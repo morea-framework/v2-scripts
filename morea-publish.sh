@@ -21,11 +21,6 @@ echo "Generating HTML site into gh-pages directory"
 echo "Committing the gh-pages branch."
 ( set -x ; cd ./gh-pages ; git add . ; git commit -a -m "$1" ; git push origin gh-pages ) 
 
-if [ $? -eq 0 ] ; then
-    echo "Commit of gh-pages branch failed. Exiting..."
-    exit 1
-fi
-
 echo "Committing the master branch"
 ( set -x ; cd ./master ; git add . ; git commit -a -m "$1" ; git push origin master ) 
 
