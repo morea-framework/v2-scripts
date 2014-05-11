@@ -16,19 +16,12 @@ if [ -d "./gh-pages" ]; then
 fi
 
 
-echo "Creating master/ directory with repo."
-( set -x ; git clone git@github.com:$1/$2.git master)
+echo "Creating master/ directory with master branch"
+( set -x ; git clone git@github.com:$1/$2.git master; cd master; git checkout master; cd ..)
 
 echo ""
-echo "Creating orphan branch, empty gh-pages/ directory."
-( set -x ; git clone git@github.com:$1/$2.git gh-pages)
-
-if [ -d "./gh-pages" ]; then
-  ( set -x ; cd gh-pages; git checkout --orphan gh-pages; git rm -rf . )
-else
-  echo "gh-pages directory not created. Exiting..."
-  exit 1
-fi
+echo "Creating gh-pages/ directory with gh-pages branch"
+( set -x ; git clone git@github.com:$1/$2.git gh-pages; cd gh-pages; git checkout gh-pages; cd ..)
 
 echo ""
 echo "master/ and gh-pages/ directories created."

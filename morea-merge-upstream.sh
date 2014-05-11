@@ -10,20 +10,15 @@ if [ ! -d "./gh-pages" ]; then
   exit 1
 fi
 
-echo "Fetching upstream (typically basic-template)"
+echo "Setting the remote to morea-framework/basic-template (this can fail if already set)"
+(set x; cd ./master; git remote add upstream https://github.com/morea-framework/basic-template.git)
+
+echo "Here are the current upstream repos:"
+(set x; cd ./master; git remote -v)
+
+echo "Fetching upstream basic-template"
 ( set -x ; cd ./master ; git fetch upstream)
-
-if [ $? -eq 0 ] ; then
-    echo "Upstream fetch failed (Maybe nothing to fetch?). Exiting."
-    exit 1
-fi
-
 
 echo "Merging upstream into master"
 ( set -x ; cd ./master ; git merge upstream/master ) 
-
-if [ $? -eq 0 ] ; then
-    echo "Upstream merge failed. Exiting."
-    exit 1
-fi
 
