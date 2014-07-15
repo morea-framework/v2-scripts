@@ -45,5 +45,5 @@ echo "Fetching upstream basic-template"
 echo "Merging upstream into master"
 ( set -x ; cd ./master ; git merge upstream/master ) 
 
-echo "Fix the README merge conflict by adding it and committing it"
+echo "Add README."
 #( set -x ; cd ./master ; git add README.md ; git commit -a -m "Adding README back into tree." ) 
