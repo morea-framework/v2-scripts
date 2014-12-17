@@ -15,6 +15,9 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
+echo "Sync gh-pages directory with GitHub repo before updating."
+( set -x ; cd ./gh-pages ; git pull )
+
 echo "Generating HTML site into gh-pages directory"
 ( set -x ; jekyll build --source ./master/src --destination ./gh-pages)
 
