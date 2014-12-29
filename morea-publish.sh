@@ -15,15 +15,15 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
-echo "Git pulling gh-pages to ensure local and remote are synced."
-( set -x ; cd ./gh-pages ; git pull ) 
+echo "Sync gh-pages directory with GitHub repo before updating."
+( set -x ; cd ./gh-pages ; git pull )
 
 echo "Generating HTML site into gh-pages directory"
 ( set -x ; jekyll build --source ./master/src --destination ./gh-pages)
 
 echo "Committing the gh-pages branch."
-( set -x ; cd ./gh-pages ; git add . ; git commit -a -m "$1" ; git push origin gh-pages ) 
+( set -x ; cd ./gh-pages ; git add --all . ; git commit -a -m "$1" ; git push origin gh-pages ) 
 
 echo "Committing the master branch"
-( set -x ; cd ./master ; git add . ; git commit -a -m "$1" ; git push origin master ) 
+( set -x ; cd ./master ; git add --all . ; git commit -a -m "$1" ; git push origin master ) 
 
