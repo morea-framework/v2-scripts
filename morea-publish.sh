@@ -15,6 +15,9 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
+echo "Git pulling gh-pages to ensure local and remote are synced."
+( set -x ; cd ./gh-pages ; git pull ) 
+
 echo "Generating HTML site into gh-pages directory"
 ( set -x ; jekyll build --source ./master/src --destination ./gh-pages)
 
