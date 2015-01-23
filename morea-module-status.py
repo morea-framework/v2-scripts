@@ -74,14 +74,15 @@ for path, subdirs, files in os.walk(root):
       # add directory entry (which is itself a directory)
       module_data[module] = {'file':module_file, 'sort_order':sort_order, 'published':published, 'comingsoon':comingsoon, 'highlight':highlight}
 
+if (len(module_data) == 0):
+  print "No module found... aborting"
+  exit(1)
 
 # Build an array of the sorted module names
 sorted_modules = [a for (a,b) in sorted(module_data.items(), key=lambda x: x[1]['sort_order'])]
 
 # Compute the maximum name length for displaying purposes
 max_name_length = reduce(lambda a,b: a if (a > b) else b, map(len,sorted_modules))
-
-## CURSES STUFF ###
 
 # initialize the screen
 stdscr = curses.initscr()
@@ -102,9 +103,9 @@ columns = {published_column:"published", comingsoon_column:"comingsoon", highlig
 # Print fixed strings
 stdscr.addstr(0, 0, "MOREA Module publishing interface",curses.A_REVERSE)
 stdscr.addstr(1, 0, "Space: toggle     q: save and quit     x: quit", curses.A_REVERSE)
-stdscr.addstr(3, published_column-4, "PUBLISHED")
+stdscr.addstr(3, published_column-4,  "PUBLISHED")
 stdscr.addstr(3, comingsoon_column-4, "COMINGSOON")
-stdscr.addstr(3, highlight_column-4, "HIGHLIGHT")
+stdscr.addstr(3, highlight_column-4,  "HIGHLIGHT")
 stdscr.refresh()
 
 # Define cursor bounds
@@ -168,6 +169,7 @@ if (save):
 	sed_flag = "-i \"\""
 
   for module in sorted_modules:
-    set_property(root+"/"+module+"/"+module_data[module]['file'], "published",         str(module_data[module]['published'] == 1).lower(),  sed_flag)
-    set_property(root+"/"+module+"/"+module_data[module]['file'], "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower(), sed_flag)
-    set_property(root+"/"+module+"/"+module_data[module]['file'], "morea_highlight",   str(module_data[module]['highlight'] == 1).lower(),  sed_flag)
+    module_file_path = root+"/"+module+"/"+module_data[module]['file']
+    set_property(module_file_path, "published",         str(module_data[module]['published'] == 1).lower(),  sed_flag)
+    set_property(module_file_path, "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower(), sed_flag)
+    set_property(module_file_path, "morea_highlight",   str(module_data[module]['highlight'] == 1).lower(),  sed_flag)
