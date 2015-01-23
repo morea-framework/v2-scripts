@@ -3,12 +3,51 @@ import curses
 import os
 import subprocess
 
-# Helper function
+# Helper function to print markers
 def marker(value):
   if (value == 0):
     return "-"
   else:
     return "X"
+
+# Helper function to convert a boolean string to a boolean
+def s2bool(string):
+  return string in ("True","true")
+
+# Helper function to find module file in a given directory
+# Returns "" if no file found
+#
+# TODO: REWRITE WITHOUT USING THE SHELL
+def find_module_file(directory):
+  module_file = subprocess.check_output("find "+directory+" -name \"*.md\" | xargs  grep -H morea_type | grep \" *morea_type *: *module *\" | sed \"s/.*\///\" | sed \"s/:.*//\"", shell=True).rstrip()
+  return module_file
+
+# Helper function to get a property in a morea file
+# Returns a string (e.g., "1", "true")
+#
+# TODO: REWRITE WITHOUT USING THE SHELL
+def get_property(path,name):
+      # Should print warning about multiple lines!!
+      s =  subprocess.check_output("cat "+path+" | grep \" *"+name+" *:\" | head -1 |  sed \"s/.*://\"", shell=True)
+      return s.strip()
+
+
+# Helper function to set a property in a morea file
+#
+# TODO: REWRITE WITHOUT USING THE SHELL
+def set_property(path, name, string_value, sed_flag):
+  subprocess.check_output("sed "+sed_flag+" \"s/ *"+name+" *:.*/"+name+": "+string_value+"/\" "+path, shell=True);
+  return
+
+
+# Helper function to find all information for a module file
+def find_module_info(path):
+      sort_order = int(get_property(path,"morea_sort_order"))
+      published = s2bool(get_property(path, "published"))
+      comingsoon = s2bool(get_property(path, "morea_coming_soon"))
+      highlight = s2bool(get_property(path, "morea_highlight"))
+      return [sort_order, published, comingsoon, highlight]
+
 
 # Determine the OS type
 system_type = subprocess.check_output("uname").rstrip()
@@ -26,19 +65,15 @@ for path, subdirs, files in os.walk(root):
   for module in subdirs:
     if path == root:
 
-      module_file = subprocess.check_output("find "+root+"/"+module+" -name \"*.md\" | xargs  grep -H morea_type | grep \" *morea_type *: *module *\" | sed \"s/.*\///\" | sed \"s/:.*//\"", shell=True).rstrip()
+      module_file = find_module_file(root+"/"+module)
       if (module_file == ""):
         continue
 
-      module_sort_order = int(subprocess.check_output("cat "+root+"/"+module+"/"+module_file+" | grep \" *morea_sort_order *:\" | head -1 |  sed \"s/.*://\"", shell=True))
+      [sort_order, published, comingsoon, highlight] = find_module_info(root+"/"+module+"/"+module_file)
 
-      published = 1 - int(subprocess.check_output("cat "+root+"/"+module+"/"+module_file+" | grep \" *published *:\" | grep false | head -1 | wc -l ", shell=True))
+      # add directory entry (which is itself a directory)
+      module_data[module] = {'file':module_file, 'sort_order':sort_order, 'published':published, 'comingsoon':comingsoon, 'highlight':highlight}
 
-      comingsoon = int(subprocess.check_output("cat "+root+"/"+module+"/"+module_file+" | grep \" *morea_coming_soon *:\" | grep true | head -1 |  wc -l ", shell=True))
-
-      highlight = int(subprocess.check_output("cat "+root+"/"+module+"/"+module_file+" | grep \" *morea_highlight *:\" | grep true | head -1 |  wc -l ", shell=True))
-
-      module_data[module] = {'file':module_file, 'sort_order':module_sort_order, 'published':published, 'comingsoon':comingsoon, 'highlight':highlight}
 
 # Build an array of the sorted module names
 sorted_modules = [a for (a,b) in sorted(module_data.items(), key=lambda x: x[1]['sort_order'])]
@@ -133,18 +168,6 @@ if (save):
 	sed_flag = "-i \"\""
 
   for module in sorted_modules:
-    if (module_data[module]['published'] == 1):
-      subprocess.check_output("sed "+sed_flag+" \"s/ *published *: *false/published: true/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-    else:
-      subprocess.check_output("sed "+sed_flag+" \"s/ *published *: *true/published: false/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-  
-    if (module_data[module]['comingsoon'] == 1):
-      subprocess.check_output("sed "+sed_flag+" \"s/ *morea_coming_soon *: *false/morea_coming_soon: true/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-    else:
-      subprocess.check_output("sed "+sed_flag+" \"s/ *morea_coming_soon *: *true/morea_coming_soon: false/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-
-    if (module_data[module]['highlight'] == 1):
-      subprocess.check_output("sed "+sed_flag+" \"s/ *morea_highlight *: *false/morea_highlight: true/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-    else:
-      subprocess.check_output("sed "+sed_flag+" \"s/ *morea_highlight *: *true/morea_highlight: false/\" "+root+"/"+module+"/"+module_data[module]['file'], shell=True);
-
+    set_property(root+"/"+module+"/"+module_data[module]['file'], "published",         str(module_data[module]['published'] == 1).lower(),  sed_flag)
+    set_property(root+"/"+module+"/"+module_data[module]['file'], "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower(), sed_flag)
+    set_property(root+"/"+module+"/"+module_data[module]['file'], "morea_highlight",   str(module_data[module]['highlight'] == 1).lower(),  sed_flag)
