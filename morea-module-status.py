@@ -10,9 +10,14 @@ def marker(value):
   else:
     return "X"
 
+# Determine the OS type
 system_type = subprocess.check_output("uname").rstrip()
 
+# Check that the root directory is there
 root = "./master/src/morea"
+if (not os.path.isdir(root)):
+  print "Can't find master/src/morea in the working directory... aborting"
+  exit(1)
 
 # Get all module information and put it in a dictionary of 
 # dictionaries {module file, sortorder, published, comingsoon} tuples
@@ -41,7 +46,7 @@ sorted_modules = [a for (a,b) in sorted(module_data.items(), key=lambda x: x[1][
 # Compute the maximum name length for displaying purposes
 max_name_length = reduce(lambda a,b: a if (a > b) else b, map(len,sorted_modules))
 
-## CURSES STUFF: some harcoded values below
+## CURSES STUFF ###
 
 # initialize the screen
 stdscr = curses.initscr()
@@ -51,19 +56,20 @@ stdscr.keypad(1)
 height = 5+len(sorted_modules); width = 50
 win = curses.newwin(height, width)
 
-# Define column offsets
-published_offset = 8
-comingsoon_offset = 19
-highlight_offset = 31
+# Define column coordinates (hardocded values to look ok)
+published_column  = max_name_length + 8
+comingsoon_column = max_name_length + 19
+highlight_column  = max_name_length + 31
 
-offsets = (published_offset, comingsoon_offset, highlight_offset)
+# dictionary of the column coordinates / meanings
+columns = {published_column:"published", comingsoon_column:"comingsoon", highlight_column:"highlight"}
 
 # Print fixed strings
 stdscr.addstr(0, 0, "MOREA Module publishing interface",curses.A_REVERSE)
 stdscr.addstr(1, 0, "Space: toggle     q: save and quit     x: quit", curses.A_REVERSE)
-stdscr.addstr(3, max_name_length+published_offset-4, "PUBLISHED")
-stdscr.addstr(3, max_name_length+comingsoon_offset-4, "COMINGSOON")
-stdscr.addstr(3, max_name_length+highlight_offset-4, "HIGHLIGHT")
+stdscr.addstr(3, published_column-4, "PUBLISHED")
+stdscr.addstr(3, comingsoon_column-4, "COMINGSOON")
+stdscr.addstr(3, highlight_column-4, "HIGHLIGHT")
 stdscr.refresh()
 
 # Define cursor bounds
@@ -74,14 +80,14 @@ max_y = min_y + len(sorted_modules)-1
 y = min_y
 for module in sorted_modules:
   stdscr.addstr(y, 0, module)
-  stdscr.addstr(y, max_name_length+published_offset, marker(module_data[module]['published']))
-  stdscr.addstr(y, max_name_length+comingsoon_offset, marker(module_data[module]['comingsoon']))
-  stdscr.addstr(y, max_name_length+highlight_offset, marker(module_data[module]['highlight']))
+  stdscr.addstr(y, published_column,  marker(module_data[module]['published']))
+  stdscr.addstr(y, comingsoon_column, marker(module_data[module]['comingsoon']))
+  stdscr.addstr(y, highlight_column,  marker(module_data[module]['highlight']))
   y += 1
 
 # Define the initial position of the cursor
-cur_x=max_name_length+published_offset
-cur_y=4
+cur_x = published_column
+cur_y = 4
 
 # Handle key presses
 while 1:
@@ -94,23 +100,15 @@ while 1:
   elif (c == curses.KEY_UP) or (c == ord('k')):
     cur_y = max(cur_y-1,min_y)
   if (c == curses.KEY_LEFT) or (c == ord('h')):
-    #cur_x = max(cur_x-(comingsoon_offset - published_offset),max_name_length+published_offset)
-    cur_x = max_name_length+ offsets[max(0, offsets.index(cur_x-max_name_length)-1)]
+    cur_x = sorted(columns.keys())[max(0, sorted(columns.keys()).index(cur_x)-1)]
   if (c == curses.KEY_RIGHT) or (c == ord('l')):
-    #cur_x = min(cur_x+(comingsoon_offset - published_offset),max_name_length+comingsoon_offset)
-    cur_x = max_name_length+ offsets[min(len(offsets)-1, offsets.index(cur_x-max_name_length)+1)]
+    cur_x = sorted(columns.keys())[min(len(columns)-1, sorted(columns.keys()).index(cur_x)+1)]
 
   # Toggle
   if c == ord(' '):
-    if (cur_x == max_name_length+published_offset):
-      module_data[sorted_modules[cur_y - min_y]]['published'] = 1 - module_data[sorted_modules[cur_y - min_y]]['published']
-      stdscr.addstr(cur_y, cur_x,marker(module_data[sorted_modules[cur_y - min_y]]['published']))
-    elif (cur_x == max_name_length+comingsoon_offset):
-      module_data[sorted_modules[cur_y - min_y]]['comingsoon'] = 1 - module_data[sorted_modules[cur_y - min_y]]['comingsoon']
-      stdscr.addstr(cur_y, cur_x,marker(module_data[sorted_modules[cur_y - min_y]]['comingsoon']))
-    elif (cur_x == max_name_length+highlight_offset):
-      module_data[sorted_modules[cur_y - min_y]]['highlight'] = 1 - module_data[sorted_modules[cur_y - min_y]]['highlight']
-      stdscr.addstr(cur_y, cur_x,marker(module_data[sorted_modules[cur_y - min_y]]['highlight']))
+    column_type = columns[cur_x]
+    module_data[sorted_modules[cur_y - min_y]][column_type] = 1 - module_data[sorted_modules[cur_y - min_y]][column_type]
+    stdscr.addstr(cur_y, cur_x,marker(module_data[sorted_modules[cur_y - min_y]][column_type]))
 
   # Quit
   elif c == ord('x'):
