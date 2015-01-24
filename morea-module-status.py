@@ -54,16 +54,21 @@ def get_property(filepath,name):
 
 # Helper function to set a property in a morea file
 #
-# TODO: REWRITE WITHOUT USING THE SHELL
 def set_property(path, name, string_value):
 
-  # Determine the right sed flag for right OS type
-  if (subprocess.check_output("uname").rstrip() == "Linux"):
-	  sed_flag = "-i"
-  else:
-	  sed_flag = "-i \"\""
+  tmp_path = "./tmp_sed_file.txt"
+  output = open(tmp_path,'w')
 
-  subprocess.check_output("sed "+sed_flag+" \"s/ *"+name+" *:.*/"+name+": "+string_value+"/\" "+path, shell=True);
+  for l in open(path,'r'):
+    m = re.match(" *"+name+" *: *(?P<value>.*)",l)
+    if (m == None):
+      output.write(l)
+    else:
+      output.write(name+": "+string_value+"\n")
+  output.close()
+
+  os.rename(tmp_path,path)
+
   return
 
 
