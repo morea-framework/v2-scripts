@@ -19,9 +19,9 @@ def s2bool(string):
 # Helper function to find module file in a given directory
 # Returns "" if no file found
 def find_module_file(directory):
-  # List all .md files
   module_file_path = None
 
+  # List all .md files
   md_file_list = glob.glob(directory+"/*.md")
   for f in md_file_list:
     value = get_property(f,"morea_type")
@@ -31,6 +31,7 @@ def find_module_file(directory):
         exit(1)
       else:
         module_file_path = f
+
   return module_file_path
 
 
@@ -54,12 +55,12 @@ def get_property(filepath,name):
 
 # Helper function to set a property in a morea file
 #
-def set_property(path, name, string_value):
+def set_property(filepath, name, string_value):
 
-  tmp_path = "./tmp_sed_file.txt"
-  output = open(tmp_path,'w')
+  tmp_filepath = "./tmp_sed_file.txt"
+  output = open(tmp_filepath,'w')
 
-  for l in open(path,'r'):
+  for l in open(filepath,'r'):
     m = re.match(" *"+name+" *: *(?P<value>.*)",l)
     if (m == None):
       output.write(l)
@@ -67,7 +68,7 @@ def set_property(path, name, string_value):
       output.write(name+": "+string_value+"\n")
   output.close()
 
-  os.rename(tmp_path,path)
+  os.rename(tmp_filepath,filepath)
 
   return
 
@@ -175,7 +176,7 @@ while 1:
   if c == ord(' '):
     column_type = columns[cur_x]
     module_data[sorted_modules[cur_y - min_y]][column_type] = 1 - module_data[sorted_modules[cur_y - min_y]][column_type]
-    stdscr.addstr(cur_y, cur_x,marker(module_data[sorted_modules[cur_y - min_y]][column_type]))
+    stdscr.addstr(cur_y, cur_x, marker(module_data[sorted_modules[cur_y - min_y]][column_type]))
 
   # Quit
   elif c == ord('x'):
@@ -198,3 +199,6 @@ if (save):
     set_property(module_data[module]['file'], "published",         str(module_data[module]['published'] == 1).lower())
     set_property(module_data[module]['file'], "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower())
     set_property(module_data[module]['file'], "morea_highlight",   str(module_data[module]['highlight'] == 1).lower())
+
+
+
