@@ -1,7 +1,9 @@
 #!/usr/bin/python
 import curses
+import glob
 import os
 import subprocess
+import re
 
 # Helper function to print markers
 def marker(value):
@@ -16,26 +18,51 @@ def s2bool(string):
 
 # Helper function to find module file in a given directory
 # Returns "" if no file found
-#
-# TODO: REWRITE WITHOUT USING THE SHELL
 def find_module_file(directory):
-  module_file = subprocess.check_output("find "+directory+" -name \"*.md\" | xargs  grep -H morea_type | grep \" *morea_type *: *module *\" | sed \"s/.*\///\" | sed \"s/:.*//\"", shell=True).rstrip()
-  return module_file
+  # List all .md files
+  module_file_path = None
+
+  md_file_list = glob.glob(directory+"/*.md")
+  for f in md_file_list:
+    value = get_property(f,"morea_type")
+    if (value == "module"):
+      if (module_file_path != None):
+        print "Directory "+directory+" contains more than one module file! Got fix it"
+        exit(1)
+      else:
+        module_file_path = f
+  return module_file_path
+
 
 # Helper function to get a property in a morea file
 # Returns a string (e.g., "1", "true")
 #
-# TODO: REWRITE WITHOUT USING THE SHELL
-def get_property(path,name):
-      # Should print warning about multiple lines!!
-      s =  subprocess.check_output("cat "+path+" | grep \" *"+name+" *:\" | head -1 |  sed \"s/.*://\"", shell=True)
-      return s.strip()
+def get_property(filepath,name):
+
+  value = None
+  for l in open(filepath,'r'): 
+    m = re.match(" *"+name+" *: *(?P<value>.*)",l)
+    if (m == None):
+      continue
+    if (value != None):
+      print "File '"+filepath+"' contains two lines for property "+name+". Got fix it!"
+      exit(1)
+    value = m.groups()[0]
+
+  return value
 
 
 # Helper function to set a property in a morea file
 #
 # TODO: REWRITE WITHOUT USING THE SHELL
-def set_property(path, name, string_value, sed_flag):
+def set_property(path, name, string_value):
+
+  # Determine the right sed flag for right OS type
+  if (subprocess.check_output("uname").rstrip() == "Linux"):
+	  sed_flag = "-i"
+  else:
+	  sed_flag = "-i \"\""
+
   subprocess.check_output("sed "+sed_flag+" \"s/ *"+name+" *:.*/"+name+": "+string_value+"/\" "+path, shell=True);
   return
 
@@ -48,9 +75,6 @@ def find_module_info(path):
       highlight = s2bool(get_property(path, "morea_highlight"))
       return [sort_order, published, comingsoon, highlight]
 
-
-# Determine the OS type
-system_type = subprocess.check_output("uname").rstrip()
 
 # Check that the root directory is there
 root = "./master/src/morea"
@@ -65,14 +89,14 @@ for path, subdirs, files in os.walk(root):
   for module in subdirs:
     if path == root:
 
-      module_file = find_module_file(root+"/"+module)
-      if (module_file == ""):
+      module_file_path = find_module_file(root+"/"+module)
+      if (module_file_path == None):
         continue
 
-      [sort_order, published, comingsoon, highlight] = find_module_info(root+"/"+module+"/"+module_file)
+      [sort_order, published, comingsoon, highlight] = find_module_info(module_file_path)
 
       # add directory entry (which is itself a directory)
-      module_data[module] = {'file':module_file, 'sort_order':sort_order, 'published':published, 'comingsoon':comingsoon, 'highlight':highlight}
+      module_data[module] = {'file':module_file_path, 'sort_order':sort_order, 'published':published, 'comingsoon':comingsoon, 'highlight':highlight}
 
 if (len(module_data) == 0):
   print "No module found... aborting"
@@ -83,6 +107,8 @@ sorted_modules = [a for (a,b) in sorted(module_data.items(), key=lambda x: x[1][
 
 # Compute the maximum name length for displaying purposes
 max_name_length = reduce(lambda a,b: a if (a > b) else b, map(len,sorted_modules))
+
+#exit(1)
 
 # initialize the screen
 stdscr = curses.initscr()
@@ -163,13 +189,7 @@ curses.endwin()
 
 if (save):
   # Implement changes (brute-force write of all relevant booleans in */*.md module files)
-  if (system_type == "Linux"):
-	sed_flag = "-i"
-  else:
-	sed_flag = "-i \"\""
-
   for module in sorted_modules:
-    module_file_path = root+"/"+module+"/"+module_data[module]['file']
-    set_property(module_file_path, "published",         str(module_data[module]['published'] == 1).lower(),  sed_flag)
-    set_property(module_file_path, "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower(), sed_flag)
-    set_property(module_file_path, "morea_highlight",   str(module_data[module]['highlight'] == 1).lower(),  sed_flag)
+    set_property(module_data[module]['file'], "published",         str(module_data[module]['published'] == 1).lower())
+    set_property(module_data[module]['file'], "morea_coming_soon", str(module_data[module]['comingsoon'] == 1).lower())
+    set_property(module_data[module]['file'], "morea_highlight",   str(module_data[module]['highlight'] == 1).lower())
