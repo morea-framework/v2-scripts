@@ -30,7 +30,7 @@ def get_property(filepath,name):
     if (m == None):
       continue
     if (value != None):
-      print "File '"+filepath+"' contains two lines for property "+name+". Got fix it!"
+      print "File '"+filepath+"' contains two lines for property "+name+". Go fix it!"
       exit(1)
     value = m.groups()[0]
 
