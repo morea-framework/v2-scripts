@@ -10,14 +10,21 @@ import re
 
 # Helper function to print markers
 def marker(value):
-  if (value == 0):
+  if value == 0:
     return "-"
-  else:
+  elif value == 1:
     return "X"
+  else:
+    return " "
 
-# Helper function to convert a boolean string to a boolean
+# Helper function to convert a string to a "boolean"
 def s2bool(string):
-  return string in ("True","true")
+  if string == None:
+    return -1
+  if string in ("True","true"):
+    return 1
+  if string in ("False","false"):
+    return 0
 
 # Helper function to get a property in a morea file
 # Returns a string (e.g., "1", "true")
@@ -38,6 +45,8 @@ def get_property(filepath,name):
 
 
 # Helper function to set a property in a morea file
+#
+# IMPORTANT: It will do nothing if the property line is not found
 #
 def set_property(filepath, name, string_value):
 
@@ -61,7 +70,7 @@ def set_property(filepath, name, string_value):
 # Returns [] if no file found
 #
 def find_md_files(directory, type_list):
-  module_file_path = None
+  module_filepath = None
   files = []
   # List all .md files
   md_file_list = glob.glob(directory+"/*.md")
@@ -73,11 +82,17 @@ def find_md_files(directory, type_list):
 
 
 # Helper function to find all information for a module file
-def find_module_info(file_path):
-      sort_order = int(get_property(file_path,"morea_sort_order"))
-      published = s2bool(get_property(file_path, "published"))
-      comingsoon = s2bool(get_property(file_path, "morea_coming_soon"))
-      highlight = s2bool(get_property(file_path, "morea_highlight"))
+def find_module_info(filepath):
+      sort_order = get_property(filepath,"morea_sort_order")
+      if sort_order == None:
+        print "File '"+filepath+"' contains no morea_sort_order! Go fix it!"
+        exit(1)
+      else:
+        sort_order = int(get_property(filepath,"morea_sort_order"))
+      published = get_property(filepath, "published")
+      published = s2bool(get_property(filepath, "published"))
+      comingsoon = s2bool(get_property(filepath, "morea_coming_soon"))
+      highlight = s2bool(get_property(filepath, "morea_highlight"))
       return [sort_order, published, comingsoon, highlight]
 
 # Helper function to find all content for a module
@@ -180,15 +195,16 @@ highlight_column  = max_name_length + 31
 columns = {published_column:"published", comingsoon_column:"comingsoon", highlight_column:"highlight"}
 
 # Print fixed strings
-stdscr.addstr(0, 0, "MOREA Module publishing interface",curses.A_REVERSE)
-stdscr.addstr(1, 0, "Space: toggle   Enter: info   q: save and quit     x: quit", curses.A_REVERSE)
-stdscr.addstr(3, published_column-4,  "PUBLISHED")
-stdscr.addstr(3, comingsoon_column-4, "COMINGSOON")
-stdscr.addstr(3, highlight_column-4,  "HIGHLIGHT")
+stdscr.addstr(0, 0, "MOREA Module publishing interface")
+stdscr.addstr(1, 0, "(Only info explicitly set to true/false in .md files is accessed)")
+stdscr.addstr(2, 0, "Space: toggle   Enter: info   q: save and quit     x: quit", curses.A_REVERSE)
+stdscr.addstr(4, published_column-4,  "PUBLISHED")
+stdscr.addstr(4, comingsoon_column-4, "COMINGSOON")
+stdscr.addstr(4, highlight_column-4,  "HIGHLIGHT")
 stdscr.refresh()
 
 # Define cursor bounds
-min_y = 4
+min_y = 5
 max_y = min_y + len(sorted_modules)-1
 
 # Print modules
@@ -202,7 +218,7 @@ for module in sorted_modules:
 
 # Define the initial position of the cursor
 cur_x = published_column
-cur_y = 4
+cur_y = 5
 
 # Handle key presses
 while 1:
@@ -247,9 +263,12 @@ curses.endwin()
 if (save):
   # Implement changes (brute-force write of all relevant booleans in */*.md module files)
   for module in sorted_modules:
-    set_property(module_info[module]['file'], "published",         str(module_info[module]['published'] == 1).lower())
-    set_property(module_info[module]['file'], "morea_coming_soon", str(module_info[module]['comingsoon'] == 1).lower())
-    set_property(module_info[module]['file'], "morea_highlight",   str(module_info[module]['highlight'] == 1).lower())
+    if (module_info[module]['published'] != None):
+      set_property(module_info[module]['file'], "published",         str(module_info[module]['published'] == 1).lower())
+    if (module_info[module]['comingsoon'] != None):
+      set_property(module_info[module]['file'], "morea_coming_soon", str(module_info[module]['comingsoon'] == 1).lower())
+    if (module_info[module]['highlight'] != None):
+      set_property(module_info[module]['file'], "morea_highlight",   str(module_info[module]['highlight'] == 1).lower())
 
 
 
