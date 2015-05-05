@@ -176,10 +176,23 @@ sorted_modules = [a for (a,b) in sorted(module_info.items(), key=lambda x: x[1][
 # Compute the maximum name length for displaying purposes
 max_name_length = reduce(lambda a,b: a if (a > b) else b, map(len,sorted_modules))
 
-#exit(1)
-
 # initialize the screen
 stdscr = curses.initscr()
+
+# Check that the window is big enough
+(height,width) = stdscr.getmaxyx()
+if (width < 80):
+	curses.nocbreak(); stdscr.keypad(0); curses.echo()
+	curses.endwin()
+	print "Terminal window needs to be wider... aborting"
+	exit(1)
+if (height < 5+len(sorted_modules)):
+	curses.nocbreak(); stdscr.keypad(0); curses.echo()
+	curses.endwin()
+	print "Terminal window needs to be taller... aborting"
+	exit(1)
+
+# Set up the screen
 curses.noecho()
 curses.cbreak()
 stdscr.keypad(1)
@@ -209,7 +222,7 @@ max_y = min_y + len(sorted_modules)-1
 
 # Print modules
 y = min_y
-for module in sorted_modules:
+for module in sorted_modules: 
   stdscr.addstr(y, 0, module)
   stdscr.addstr(y, published_column,  marker(module_info[module]['published']))
   stdscr.addstr(y, comingsoon_column, marker(module_info[module]['comingsoon']))
