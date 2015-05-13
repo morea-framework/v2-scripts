@@ -33,17 +33,14 @@ fi
 echo ""
 echo "master/ and gh-pages/ directories created."
 
-echo "Setting the remote to morea-framework/basic-template (this can fail if already set)"
-(set x; cd ./master; git remote add upstream https://github.com/morea-framework/basic-template.git)
+echo "Adding a remote called 'core' connected to morea-framework/core (this can fail if already set)"
+(set x; cd ./master; git remote add core https://github.com/morea-framework/core.git)
 
 echo "Here are the current upstream repos:"
 (set x; cd ./master; git remote -v)
 
-echo "Fetching upstream basic-template"
-( set -x ; cd ./master ; git fetch upstream)
+echo "Fetching core"
+( set -x ; cd ./master ; git fetch core)
 
-echo "Merging upstream into master"
-( set -x ; cd ./master ; git merge upstream/master ) 
-
-echo "Add README."
-#( set -x ; cd ./master ; git add README.md ; git commit -a -m "Adding README back into tree." ) 
+echo "Merging core into master"
+( set -x ; cd ./master ; git merge -m "merging core into master" core/master ) 
