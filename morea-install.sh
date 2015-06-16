@@ -21,7 +21,7 @@ echo "Creating master/ directory with master branch"
 
 echo ""
 echo "Creating gh-pages/ directory with gh-pages branch"
-( set -x ; git clone git@github.com:$1/$2.git gh-pages; cd gh-pages; git checkout gh-pages; cd ..)
+( set -x ; git clone git@github.com:$1/$2.git gh-pages; cd gh-pages; git checkout gh-pages; git branch -u origin/gh-pages; cd ..)
 
 echo ""
 echo "master/ and gh-pages/ directories created."

@@ -24,7 +24,7 @@ echo "Creating orphan branch, empty gh-pages/ directory."
 ( set -x ; git clone git@github.com:$1/$2.git gh-pages)
 
 if [ -d "./gh-pages" ]; then
-  ( set -x ; cd gh-pages; git checkout --orphan gh-pages; git rm -rf . )
+  ( set -x ; cd gh-pages; git checkout --orphan gh-pages; git rm -rf .; git branch -u origin/gh-pages )
 else
   echo "gh-pages directory not created. Exiting..."
   exit 1
