@@ -10,15 +10,15 @@ if [ ! -d "./gh-pages" ]; then
   exit 1
 fi
 
-echo "Setting the remote to morea-framework/basic-template (this can fail if already set)"
-(set x; cd ./master; git remote add upstream https://github.com/morea-framework/basic-template.git)
+echo "Adding a remote called core linked to morea-framework/core (this can fail if already set)"
+(set x; cd ./master; git remote add core https://github.com/morea-framework/core.git)
 
 echo "Here are the current upstream repos:"
 (set x; cd ./master; git remote -v)
 
-echo "Fetching upstream basic-template"
-( set -x ; cd ./master ; git fetch upstream)
+echo "Fetching upstream core"
+( set -x ; cd ./master ; git fetch core)
 
-echo "Merging upstream into master"
-( set -x ; cd ./master ; git merge upstream/master ) 
+echo "Merging core into master"
+( set -x ; cd ./master ; git merge -m "Merging core into master" core/master ) 
 
