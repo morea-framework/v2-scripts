@@ -11,7 +11,7 @@ if [ ! -d "./gh-pages" ]; then
 fi
 
 echo "Pulling the gh-pages directory."
-( set -x ; cd ./gh-pages ; git pull ) 
+( set -x ; cd ./gh-pages ; git branch -u origin/gh-pages ; git pull ) 
 
 echo "Pulling the master directory"
 ( set -x ; cd ./master ; git pull)
