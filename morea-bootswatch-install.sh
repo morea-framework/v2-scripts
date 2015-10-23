@@ -28,6 +28,9 @@ echo "Installing cerulean_purple"
 echo "Installing cerulean_red"
 ( set -x ; cd ../bootswatch/ ; grunt swatch:cerulean_red ; cp cerulean_red/bootstrap.min.css ../core/src/css/themes/cerulean_red/ )
 
+echo "Installing cyborg"
+( set -x ; cd ../bootswatch/ ; grunt swatch:cyborg ; cp cyborg/bootstrap.min.css ../core/src/css/themes/cyborg/ )
+
 echo "Installing darkly"
 ( set -x ; cd ../bootswatch/ ; grunt swatch:darkly ; cp darkly/bootstrap.min.css ../core/src/css/themes/darkly/ )
 
