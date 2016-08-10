@@ -17,7 +17,7 @@ fi
 
 
 echo "Creating master/ directory with master branch (BITBUCKET)"
-( set -x ; mkdir master; cd master; git init; git remote add origin https://henricasanova@bitbucket.org/$1/$2.git; cd ..)
+( set -x ; mkdir master; cd master; git init; git remote add origin https://$1@bitbucket.org/$1/$2.git; cd ..)
 
 echo "Adding a remote called 'core' connected to morea-framework/core (this can fail if already set)"
 (set x; cd ./master; git remote add core https://github.com/morea-framework/core.git)
