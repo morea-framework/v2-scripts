@@ -15,27 +15,78 @@ if [ -d "./gh-pages" ]; then
   exit 1
 fi
 
+BBUSER=$1
+BBREPO=$2
+GHUSER=$3
+GHREPO=$4
 
-echo "Creating master/ directory with master branch (BITBUCKET)"
-( set -x ; mkdir master; cd master; git init; git remote add origin https://$1@bitbucket.org/$1/$2.git; cd ..)
+#
+# Check non-existence of repositories on BB and GH
+#
+# Check non-existence of repository on BB
+git ls-remote git@bitbucket.org:$BBUSER/$BBREPO.git 2>&1 > /dev/null 
+if [ $? == 0 ]; then
+    echo "Repository $BBREPO already exists on bitbucket"
+    exit 1
+fi
 
-echo "Adding a remote called 'core' connected to morea-framework/core (this can fail if already set)"
-(set x; cd ./master; git remote add core https://github.com/morea-framework/core.git)
+# Check non-existence of repository on BB
+git ls-remote git@github.com:$GHUSER/$GHREPO.git 2>&1 > /dev/null 
+if [ $? == 0 ]; then
+    echo "Repository $GHREPO already exists on github"
+    exit 1
+fi
 
-echo "Fetching core"
-( set -x ; cd ./master ; git fetch core)
+#
+# All good
+# 
 
-echo "Merging core into master"
-( set -x ; cd ./master ; git merge -m "merging core into master" core/master )
+# Create repository on bitbucket
+echo "Setting up repository on bitbucket"
+echo
+echo -n "Bitbucket password for $BBUSER: "
+# read -s PASSWORD
+# echo
+#curl --user $BBUSER:$PASSWORD https://api.bitbucket.org/1.0/repositories/ --data name=$BBREPO > /dev/null
+curl -s -u $BBUSER https://api.bitbucket.org/1.0/repositories/ --data name=$BBREPO 2>&1 > /dev/null
+mkdir master
+cd master
+git init
+touch README.md
+git add README.md
+git commit -m "First commit"
+git remote add origin git@bitbucket.org:$BBUSER/$BBREPO.git
+git push -u origin master
+cd ..
 
-echo ""
-echo "Creating gh-pages/ directory with gh-pages branch (GITHUB)"
-( set -x ; git clone git@github.com:$3/$4.git gh-pages; cd gh-pages; git checkout gh-pages; git branch -u origin/gh-pages; cd ..)
+# Create repository on github
+echo "Setting up repository on github"
+echo
+echo -n "Github password for $BBUSER: "
+curl -s -u $GHUSER https://api.github.com/user/repos -d "{\"name\":\"$GHREPO\"}" 2>&1 > /dev/null
+mkdir gh-pages
+cd gh-pages
+git init
+touch README.md
+git add README.md
+git commit -m "First commit"
+git remote add origin git@github.com:$GHUSER/$GHREPO.git
+git push -u origin master
+git checkout -b gh-pages
+git push origin gh-pages
+cd ..
 
+# Pull the morea framework into master
+cd master
+git remote add core https://github.com/morea-framework/core.git
+git fetch core
+git merge -m "merging core into master" core/master
+git push -u origin --all
+cd ..
 
-
-echo ""
-echo "master/ and gh-pages/ directories created."
-echo "Now you can do a morea-merge-upstream.sh to get the core."
+git clone https://github.com/morea-framework/scripts
+mv scripts/morea-* .
+chmod +x morea-*
+rm -rf scripts
 
 
