@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# != 4 ]; then
-    echo "morea-install <bitbucket account> <bitbucket repo> <github account> <github repo>"
+    echo "morea-install-github-bitbucket.sh <bitbucket account> <bitbucket repo> <github account> <github repo>"
     exit 1
 fi
 
