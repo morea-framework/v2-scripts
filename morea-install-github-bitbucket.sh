@@ -80,7 +80,7 @@ cd ..
 cd master
 git remote add core https://github.com/morea-framework/core.git
 git fetch core
-git merge -m "merging core into master" core/master
+git merge --allow-unrelated-histories -m "merging core into master" core/master
 git push -u origin --all
 cd ..
 
