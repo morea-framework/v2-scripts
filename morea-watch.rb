@@ -16,11 +16,20 @@ if RUBY_PLATFORM =~ /mswin32/ then
 end
 
 def fork_MOREA()
-  pid = fork do
-    exec "./morea-run-local.sh"
-  end
+# stdout, stderr pipes
+	rout, wout = IO.pipe
+	rerr, werr = IO.pipe
+
+	pid = Process.spawn("./morea-run-local.sh", :out => wout, :err => werr)
 	Process.detach(pid)
-	sleep 5
+	
+# Wait until we see the MOREA server is running 
+	until (line=rout.gets) =~ /Server running/ 
+    	puts(line) 
+  	end
+	wout.close
+	werr.close
+	
 	return pid 
 end
 
@@ -80,6 +89,8 @@ while true do
       puts "goodby pid #{morea_pid}, restarting MOREA"
     end
     morea_pid = fork_MOREA
+# If using Chrome, tell it to reload the page so changes can be seen
+    `osascript -e 'tell application "Google Chrome" to tell the active tab of its first window to reload'`
   end
   sleep 1
 end
